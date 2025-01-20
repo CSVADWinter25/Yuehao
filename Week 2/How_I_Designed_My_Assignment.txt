@@ -1,0 +1,27 @@
+How I designed my assignment
+
+My inspiration for this assignment came from the symmetrical drawing example in class, 
+where the canvas displays the mirrored line drawn on the opposite side of the horizontal and vertical symmetrical lines
+at each frame. As it is almost the Chinese New Year, 
+and the red paper cut is a traditional folk art usually stuck on the windows, 
+I was inspired to modify the example a little bit and change it into an “octagon-symmetrical” pattern 
+that radiates from the center point.
+
+The designing of the logic for the code is buttressed with Chat GPT. 
+It indicates that at every frame, when a new dot of the original line is drawn by the mouse, t
+he program automatically creates seven more reflection dots. 
+In an octagon, each symmetrical angle is (360° / 8 = 45°). 
+When a new dot on the original position of the mouse is drawn, just like the example in class, 
+the other three dots are created according to the horizontal and vertical symmetrical lines, 
+as well as the diagonal dot. 
+A for loop is executed to rotate the baseline for 45 degrees every time and to draw the rotated dots. 
+The “drawSymmetricLine” function in the code takes care of drawing one line and all its reflections.
+
+Since the paper cuts are usually red to symbolize harmony and luck for the upcoming new year, 
+the program is designed to draw the new dots of the lines with dark and light red colors. 
+With the code “stroke(200 - s1, s2 * 0.5, s2 * 0.6);” written, 
+it oscillates between different gradients of red colors as the parameters “s1” and “s2” 
+switches back and forth between the value of 1 to 100. The same applies to the thickness of the lines.
+
+As a result, the program generates a kaleidoscope-like paper cut pattern, 
+and I do believe it is great for generating the “window paper cuts” for the upcoming Chinese New Year.
