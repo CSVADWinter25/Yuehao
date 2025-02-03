@@ -1,0 +1,22 @@
+Assignment 3:Gear-Wheel Simulation in Processing
+
+This project is a gear-wheel simulation built using Processing, 
+featuring multiple gears of varying sizes that spin dynamically in different directions. 
+Each gear is positioned at a fixed-random location, 
+with its size and movement parameters stored in lists for easy control and modification.
+
+The simulation allows customization of the number of gears displayed and their general spinning speed, 
+making it flexible for different visual effects. 
+Each individual gear is constructed from four rectangular boxes, 
+which are positioned and oriented based on a calculated phase increment to simulate rotational motion.
+
+To achieve smooth animation, two nested for-loops in the draw() function iterate through the gears, 
+updating their positions and rendering them each frame. While the gears rotate and animate as expected, 
+one challenge remains: the color settings do not apply properly to the "box" objects, 
+which may be due to Processing’s rendering limitations or an issue with how materials 
+and lighting are handled in the 3D space.
+
+This project combines randomized positioning, structured rotation mechanics, 
+and list-based data management to create a visually engaging and procedurally controlled scene. 
+Future improvements may include fixing the color issue, adding lighting effects, 
+or refining the rotation mechanics for enhanced realism.
