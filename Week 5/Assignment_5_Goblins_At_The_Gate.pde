@@ -151,9 +151,11 @@ void draw() {
       
       // Pick one "dangerous" agent to do that shooting work
       int shooter = floor(random(0, dangerousAgents.size()));
-      for (int i = 0; i < 10; i++) {
-        float angle = TWO_PI / 10 * i;
-        agentBullets.add(new Bullet(dangerousAgents.get(shooter).getLocation().copy(), angle, false, false));
+      if (dangerousAgents.size() > 0) {
+        for (int i = 0; i < 10; i++) {
+          float angle = TWO_PI / 10 * i;
+          agentBullets.add(new Bullet(dangerousAgents.get(shooter).getLocation().copy(), angle, false, false));
+        }
       }
       
       lastAgentShootFrame = numFrames;
@@ -252,7 +254,9 @@ void draw() {
 
         if (isBulletHittingGoblin(ab)) {
           ab.hit();
-          goblin.getHit(20);
+          if (!goblin.getIsShielded()) {
+            goblin.getHit(20);
+          }
         }
         
       }
