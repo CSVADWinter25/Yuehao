@@ -1,0 +1,32 @@
+Introduction to "Goblin at the Gate"
+This project is an extension of the agent-following-mouse example demonstrated in class, 
+evolving into an interactive survival game titled "Goblin at the Gate." 
+The game introduces a heroic goblin struggling to survive against an ever-growing horde of enemies.
+
+Gameplay Mechanics
+Enemy Behavior: 
+The enemies continuously chase the goblin with an increasing speed over time. 
+Each enemy has its own size and attack value, making them more dangerous as the game progresses.
+
+Avoidance & Survival: 
+The goblin must dodge enemies to avoid losing life unless it activates a shield by picking up the blue square.
+
+Power-Ups: 
+Collecting a green square (potion) restores life, 
+while the blue square (shield) temporarily grants invincibility, allowing the goblin to crash into enemies without taking damage.
+
+Combat System:
+The goblin fires bullets every 5 seconds, launching 6 projectiles to eliminate enemies.
+When shielded, the goblin not only becomes invulnerable but also:
+Shoots 16 bullets instead of 6
+Gains unlimited shooting ability during the 2-second shield duration
+Can crash into enemies to destroy them instantly
+
+Each enemy defeated grants a score, and the challenge is to survive as long as possible while maximizing points.
+
+Design Inspiration
+The design of "Goblin at the Gate" draws inspiration from readings on "Vehicles" and interactive agent systems, 
+particularly those featuring “flocking behaviors”, such as schools of fish or swarms of creatures. 
+The game's adaptive enemy movement, emergent challenge, and dynamic power-ups create an engaging balance between survival and strategy.
+
+This project explores AI-driven movement, interactive agent behavior, and player adaptability in an evolving, fast-paced game environment
