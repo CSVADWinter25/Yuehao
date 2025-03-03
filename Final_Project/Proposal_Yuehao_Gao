@@ -1,0 +1,92 @@
+Proposal for MAT236 Final Project
+Generative Interactive Game – "Goblin at the Gate"
+Yuehao Gao
+February 27th, 2025
+
+1. Introduction
+This project builds upon my existing game, "Goblin at the Gate," initially developed in Processing. The game features a hero ball (Goblin) trying to survive continuous waves of attacking enemies while dodging and strategically shooting back. The goal is to survive as long as possible while maximizing the score by eliminating as many enemies as possible.
+To meet the "generative works" requirement, this project will evolve into a procedurally generated audiovisual experience, incorporating dynamic gameplay, generative visuals, and interactive sound synthesis. The final output will be a series of generative works (3+ variations) that emerge through different playthroughs, each with unique game dynamics, visual aesthetics, and musical patterns.
+
+2. Current Game Features
+The current version of "Goblin at the Gate" includes the following features:
+Core Gameplay Mechanics
+•	The Goblin (hero ball) follows the player's mouse movement.
+•	Enemies appear randomly at the edges of the canvas and continuously move toward the Goblin.
+•	Both the Goblin and enemies can shoot bullets in multiple directions.
+•	Enemies with higher attack values are more likely to shoot bullets and deduct more health value from the hero ball if collide.
+•	The Goblin has a cooldown time before it can fire again.
+•	The number of bullets fired by the Goblin gradually increases over time.
+Health, Power-ups, and Difficulty Progression
+•	If the Goblin is hit by an enemy, it loses life points.
+•	The lower the Goblin’s health, the smaller its size, making survival harder.
+•	Potions (green squares) spawn every 10 seconds and restore health.
+•	Shields (blue squares) spawn every 15 seconds and grant 3 seconds of invincibility:
+o	During this period, the Goblin can collide with enemies without losing life.
+o	The Goblin’s bullet count triples, and it can fire continuously without recharging.
+•	The game becomes progressively harder over time:
+o	Enemies move faster.
+o	The interval between enemy spawns decreases, making survival increasingly difficult.
+Game Over and Restart Mechanism
+•	When the Goblin loses all health, the game ends.
+•	The screen displays "Game Over," survival time, and final score.
+•	Pressing the space bar restarts the game.
+•	Cheat Key: Pressing "Q" activates permanent shield mode.
+
+3. Planned Upgrades & Generative Elements
+To evolve this project into a generative system, the following enhancements will be implemented:
+1. Expanded Game Mechanics (Enhancing Generativity through Interactions)
+•	Enhanced Bullets:
+o	Bullets will bounce off walls, allowing for strategic ricochet shots.
+o	Upon hitting an enemy, bullets will split into multiple smaller bullets, potentially hitting multiple targets.
+•	Adaptive Difficulty Scaling:
+o	Enemies will not only speed up but also adapt to the player’s survival time and movement patterns, ensuring that every game session evolves differently.
+o	Different enemy types may appear over time with unique movement behaviors.
+•	Interactive Artistic Patterns:
+o	Players can draw symmetrical patterns on the canvas by holding the mouse button, creating procedural artistic effects in real time.
+2. Generative Visuals & Aesthetics (Creating a Visually Evolving Experience)
+•	Dynamic Background Patterns:
+o	The background will change colors and patterns based on in-game actions (e.g., surviving longer shifts in the color scheme).
+o	Background patterns will gradually transform based on enemy movements, bullet trajectories, and player actions.
+•	Transition from 2D to 3D:
+o	The game elements (hero, enemies, bullets) will be rendered in 3D using Processing’s P3D mode, enhancing depth and realism.
+o	Objects may tilt, scale, or rotate dynamically, depending on the player’s movement.
+3. Procedural Sound & Music Composition (Turning the Game into a Musical Instrument)
+•	Movement-Based Sound Generation:
+o	The Goblin’s movement speed will control a granular sine/square wave synthesis:
+	Faster movement = louder sound.
+	Further from the center = higher pitch.
+o	Enemies will generate low-frequency sine waves, shifting in pitch and panning as they move.
+•	Event-Based Sound Effects:
+o	Enemy Hits: Short bursts of harmonic square waves.
+o	Goblin Takes Damage: Inharmonic, detuned sound to signal failure.
+•	Emergent Soundscape:
+o	The entire game session will generate a unique soundscape that functions as a real-time generative music piece.
+o	The final product will allow for both gameplay and musical performance recording.
+
+4. How the Project Meets the "Generative Works" Requirement
+1. Algorithmic Generation of Unique Experiences
+•	Every playthrough features procedural enemy behaviors, randomized bullet physics, and adaptive visuals.
+•	The game dynamically adjusts difficulty and aesthetic transformations, ensuring no two games are identical.
+2. Series of Generative Works (3-10 Distinct Variations)
+Each playthrough produces a unique generative output based on:
+•	Different enemy formations & bullet trajectories.
+•	Evolving visual effects & dynamic backgrounds.
+•	A procedural, interactive sound composition that reflects gameplay.
+Each session can be exported as a self-contained generative artwork, forming a series of 3-10 variations.
+3. Player-Driven Generativity
+•	Players not only play the game but also create procedural visual and audio compositions.
+•	The symmetric drawing mechanism allows for player-generated art that is procedural yet unique.
+
+5. Potential Challenges & Solutions
+(1). Handling bouncing bullets without performance issues: Optimize collision detection and limit max bounces per bullet.
+(2). Transitioning from 2D to 3D smoothly: Gradually introduce 3D scaling & depth before full transformation.
+(3). Keeping sound harmonically pleasant: Use harmonic series tuning to ensure coherence.
+(4). Ensuring generative visuals are aesthetic, not chaotic: Implement smooth transitions and algorithmic rules for balanced outputs.
+
+6. Conclusion & Expected Outcome
+This enhanced version of "Goblin at the Gate" will evolve from a survival game into a generative audiovisual system, where:
+•	Gameplay, visuals, and sound interact dynamically, forming a unique, emergent experience.
+•	Each session generates a distinct audiovisual composition, producing 3-10 generative works.
+•	Players engage in both game mechanics and artistic co-creation, shaping the final aesthetic and musical output.
+The final project will serve as a creative exploration of game design, procedural art, and interactive sound synthesis, demonstrating the power of generativity through algorithmic systems.
+
