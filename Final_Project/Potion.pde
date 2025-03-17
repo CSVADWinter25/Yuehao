@@ -11,10 +11,33 @@ class Potion {
   }
   
   void display() {
-    fill(0, 255, 0);
+    pushMatrix();
+    translate(position.x + size / 2, position.y + size / 2); // Center the potion
+
+    // Glowing outline effect
+    for (int i = 4; i > 0; i--) {
+      float glowSize = size + i * 3;
+      fill(0, 255, 0, 40 - i * 8); // Green glow fading out
+      noStroke();
+      square(-glowSize / 2, -glowSize / 2, glowSize);
+    }
+
+    // **Potion Body - Stack of Squares**
+    fill(0, 255, 0); // Green potion color
     noStroke();
-    square(position.x, position.y, size);
+  
+    float topSize = size * 0.3;  // Smallest top square (potion cap)
+    float midSize = size * 0.6;  // Middle square
+    float baseSize = size;       // Largest bottom square (potion body)
+
+    // Draw squares from top to bottom
+    square(-topSize / 2, -size * 0.6, topSize);    // Top part
+    square(-midSize / 2, -size * 0.3, midSize);    // Middle part
+    square(-baseSize / 2, 0, baseSize);           // Bottom part (largest)
+
+    popMatrix();
   }
+
 
   PVector getLocation() {
     return position;
