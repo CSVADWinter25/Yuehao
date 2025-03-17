@@ -63,5 +63,4 @@ class Potion {
     PVector newPosition = new PVector(random(0 + 50, width - 50), random(50, height - 50));
     position = newPosition;
   }
-
 }
