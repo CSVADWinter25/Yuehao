@@ -17,11 +17,24 @@ class Agent {
   }
   
   void display() {
-    fill(110 + ((attack - 3) * 40), colorG, 0);
+    pushMatrix(); // Save transformation state
+    translate(position.x, position.y); // Move to agent position
 
+    // **Bubble Body (Main Circle)**
+    fill(110 + ((attack - 3) * 40), colorG, 0, 180); // Semi-transparent color
     noStroke();
-    circle(position.x, position.y, size);
+    circle(0, 0, size);
+
+    // **Inner Highlight (White Circle)**
+    float highlightSize = size * 0.3; // Smaller highlight circle
+    PVector highlightOffset = velocity.copy().setMag(size * 0.2); // Position based on velocity
+  
+    fill(255, 255, 255, 200); // White highlight
+    circle(highlightOffset.x, highlightOffset.y, highlightSize);
+
+    popMatrix(); // Restore transformation state
   }
+
   
   void updateSpeed(float newSpeed) {
     speedIndex = newSpeed;
@@ -29,13 +42,24 @@ class Agent {
   
   void updateLocation() {
     PVector mousePosition = new PVector(mouseX, mouseY);
-    PVector direction = mousePosition.sub(position);
-    velocity = direction.normalize();
-    velocity.x = velocity.x * speedIndex;
-    velocity.y = velocity.y * speedIndex;
-    for (int i = 0; i < 2; i++) {
-      position.add(velocity);
-    }
+    PVector direction = mousePosition.copy().sub(position);
+    velocity = direction.normalize(); // Move toward the Goblin
+  
+    // Adjust speed: Lower attack → Faster movement
+    float speedMultiplier = map(attack, 3, 12, 1.5, 0.8); // Scale speed (weaker enemies move faster)
+    float adjustedSpeed = speedIndex * speedMultiplier;
+
+    // Wavy movement parameters
+    float waveFrequency = 0.5 + 0.1 * (12 - attack) + adjustedSpeed * 0.6; // Hz
+    float waveAmplitude = attack + adjustedSpeed * 0.6; // How wide the wavy motion is
+    float waveOffset = sin(TWO_PI * waveFrequency * (numFrames / 60.0)) * waveAmplitude;
+
+    // Determine the perpendicular direction
+    PVector perpendicular = new PVector(-velocity.y, velocity.x);
+  
+    // Apply the wavy movement in the perpendicular direction
+    position.add(velocity.copy().mult(adjustedSpeed)); // Move forward with adjusted speed
+    position.add(perpendicular.mult(waveOffset * 0.02)); // Add wavy offset
   }
   
   PVector getLocation() {
