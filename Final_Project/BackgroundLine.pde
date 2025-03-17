@@ -1,7 +1,7 @@
 class BackgroundLine {
   PVector start, end;
   float angle;
-  color baseColor = color(80); // Default dim gray
+  color baseColor = color(30); // Default dim gray
   color currentColor;
   int flashFrames = 0; // Controls flashing effect
   boolean blinking = false; // Tracks blinking mode
