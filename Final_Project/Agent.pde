@@ -1,5 +1,3 @@
-import processing.sound.*;
-
 class Agent {
   PVector velocity;
   PVector position;
