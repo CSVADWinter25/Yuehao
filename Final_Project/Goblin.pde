@@ -60,8 +60,21 @@ class Goblin {
   }
   
   void updateLocation() {
-    PVector mousePosition = new PVector(mouseX, mouseY);
-    position = mousePosition;
+    PVector newPosition = new PVector(mouseX, mouseY);
+
+    // Check if the new position collides with any obstacle
+    boolean colliding = false;
+    for (Obstacle obs : obstacles) {
+      if (obs.isColliding(newPosition, size)) {
+        colliding = true;
+        break;
+      }
+    }
+
+    // If not colliding, update position
+    if (!colliding) {
+      position = newPosition;
+    }
   }
   
   int getLife() {
