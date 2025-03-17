@@ -3,29 +3,60 @@ class Goblin {
   float size;
   int life;
   boolean isShielded;
+  PShape goblinShape;
+  boolean isGlowingGreen; // New flag for green glow
+  int potionGlowStartFrame; // Stores when the potion was taken
+  
   
   Goblin() {
     position = new PVector(mouseX, mouseY);
     life = 150;
-    size = life * 0.33;
+    size = life * 0.23 + 30;
     isShielded = false;
+    isGlowingGreen = false;
+    potionGlowStartFrame = -1000; // Start far in the past
+    goblinShape = loadShape("knight.svg");
   }
   
   void display() {
-    if (!isShielded) {
-      fill(255, 200, 0);
-    } else {
-      fill(173, 216, 210);
+    pushMatrix();  
+    translate(position.x, position.y);  
+
+    // **Shielded Glow Effect (Blue)**
+    if (isShielded) {
+      for (int i = 5; i > 0; i--) {  
+        float glowSize = size + i * 10;
+        fill(173, 216, 230, 50 - i * 8);
+        noStroke();
+        ellipse(0, 0, glowSize, glowSize);
+      }
     }
+    
+    // **Potion Glow Effect (Green)**
+    if (isGlowingGreen) {
+      for (int i = 5; i > 0; i--) {  
+        float glowSize = size + i * 10;
+        fill(0, 255, 0, 50 - i * 8); // Bright green glow
+        noStroke();
+        ellipse(0, 0, glowSize, glowSize);
+      }
+    }
+
+    // Draw Goblin (Main Shape)
+    fill(100, 100, 10);
     noStroke();
-    circle(position.x, position.y, size);
-    
-    //size((int)size, (int)size, P3D);
-    //noStroke();
-    //lights();
-    //translate(position.x, position.y, 0);
-    //sphere(size);
-    
+    shape(goblinShape, -size / 2, -size / 2, size, size);
+
+    popMatrix();
+  }
+  
+  void startPotionGlow() {
+    isGlowingGreen = true;
+    potionGlowStartFrame = numFrames; // Start counting
+  }
+
+  void stopPotionGlow() {
+    isGlowingGreen = false;
   }
   
   void updateLocation() {
@@ -52,7 +83,7 @@ class Goblin {
   void getHit(int attack) {
     if (!isShielded) {
       life -= attack;
-      refreshSize(round(life * 0.33));
+      refreshSize(round(life * 0.23 + 30));
     }
   }
   
@@ -65,7 +96,7 @@ class Goblin {
     if (life > 150) {
       life = 150;
     }
-    refreshSize(round(life * 0.33));
+    refreshSize(round(life * 0.23 + 30));
   }
   
   void shield() {
@@ -75,7 +106,4 @@ class Goblin {
   void unShield() {
     isShielded = false;
   }
-  
-  
-
 }
