@@ -94,6 +94,7 @@ class Bullet {
     return isActive;
   }
   
+  
   boolean getBelongGoblins() {
     return belongGoblins;
   }
