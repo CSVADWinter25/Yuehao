@@ -1,19 +1,47 @@
+import processing.sound.*;
+
 class Agent {
   PVector velocity;
   PVector position;
   float speedIndex;
   float colorG;
   float colorB;
-
-  int attack = 3 + floor(random(0, 9));
-  float size = attack * 2 - 10;
+  int attack;
+  float size;
   
-  Agent(float positionX, float positionY, float speed) {
+  SinOsc osc;
+  float agentAmplitude = 0.02;
+  int lastToneChange = 0;
+  
+  PApplet parent;
+  
+  Agent(float positionX, float positionY, float speed, PApplet p) {
+    parent = p;
     position = new PVector(positionX, positionY);
     velocity = new PVector(0, 0);
     speedIndex = speed;
+    attack = 3 + floor(random(0, 9));
+    size = attack * 2 - 10;
+    
     colorG = random(0.0, 200.0);
     colorB = random(0.0, 60.0);
+    
+    osc = new SinOsc(parent);
+    osc.amp(agentAmplitude);
+    changeTone();
+    osc.play();
+  }
+  
+  void changeTone() {
+    int chordIndex = currentChord;
+    int noteIndex = floor(random(0, 5));
+    float baseFreq = chords[chordIndex][noteIndex];
+    float octaveMultiplier = map(attack, 3, 12, 2.0, 0.5);
+    osc.freq(baseFreq * octaveMultiplier);
+  }
+  
+  void stopSound() {
+    osc.stop();
   }
   
   void display() {
