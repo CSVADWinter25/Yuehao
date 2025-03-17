@@ -66,3 +66,4 @@ class BackgroundLine {
     blinkCounter = 0;
   }
 }
+
