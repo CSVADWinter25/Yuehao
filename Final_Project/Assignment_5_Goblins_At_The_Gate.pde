@@ -7,11 +7,12 @@
 
 // HOW TO PLAY THIS GAME: 
 // - survive for longer, dodge the enemies and their bullets
+// - there are obstacles appearing, so dodge them while avoiding the enemies
 // - shoot enimies by clicking the mouse
 //   it is available every 3 second, unless being "shielded", which enable unlimited shooting
-// - crash enimies when shielded (after picking up the blue square)
+// - crash enimies when shielded (after picking up the blue shield)
 //   shooting ability will be increased
-// - pick up potions (green square) to regain life
+// - pick up potions (green bottle) to regain hp values
 
 
 
@@ -64,6 +65,7 @@ ArrayList<Bullet> goblinBullets = new ArrayList<Bullet>();
 ArrayList<Bullet> goblinBulletsToRemove = new ArrayList<Bullet>();
 ArrayList<Bullet> agentBullets = new ArrayList<Bullet>();
 ArrayList<Bullet> agentBulletsToRemove = new ArrayList<Bullet>();
+ArrayList<Obstacle> obstacles = new ArrayList<Obstacle>();
 
 
 // All parameters ------------------------------------
@@ -90,6 +92,8 @@ int takeShieldFrame = 0;
 int numGoblinBullet;
 int numNormalGoblinBullet;
 int numShieldedGoblinBullet;
+int obstacleSpawnTime = 900;         // Obstacles start appearing 15 seconds after game start
+int lastObstacleSpawnFrame = -1000;  // Ensures the first obstacle appears correctly
 int shieldDuration = 120;            // Shield lasts for 2 seconds
 int lastPickShieldFrame = -2200;
 float shieldRechargeRatio = 0.0;
@@ -105,11 +109,10 @@ ArrayList<BackgroundLine> bgLines = new ArrayList<BackgroundLine>();
 
 
 
-
-
 // --------------------------------------------------
 void setup() {
   background(0);
+  bgLines.clear();
   gameRunning = true;
   isPaused = false;
   needClearing = false;
@@ -129,6 +132,8 @@ void setup() {
   numShieldedGoblinBullet = 3 * numGoblinBullet;
   numGoblinBullet = numNormalGoblinBullet;
   
+  obstacles.clear();
+  lastObstacleSpawnFrame = numFrames;
   
   // Initialize the "Goblin" and "enemy agents"
   goblin = new Goblin();
@@ -155,7 +160,7 @@ void setup() {
   
   for (int i = 0; i < 5; i++) {
     SinOsc newOscillator = new SinOsc(this);
-    newOscillator.amp(0.04);
+    newOscillator.amp(0.03);
     sineOscs.add(newOscillator);
   }
   
@@ -216,9 +221,11 @@ void draw() {
     
     float lifeRatio = 1.0 - ((float) goblin.getLife() / 150.0); // Max life is 150
     hpBar.refreshCurrentLength(lifeRatio);
+    hpBar.display();
     
     fill(255);
     text("Life: " + goblin.getLife(), 25, 30);
+    text("Press Space to Pause", 25, 140);
     text("Time lapsed: " + survivedTime + "s", 25, 50);
     text("Your score: " + score, 25, 70);
     
@@ -250,6 +257,12 @@ void draw() {
     if (numFrames % newAgentFrameCount == 0) {
       Agent oneNewAgent = newAggentAppear(agentSpeed);
       agents.add(oneNewAgent);
+    }
+    
+    // If it is time to add new obstacle, do that
+    if (numFrames >= obstacleSpawnTime && (numFrames - lastObstacleSpawnFrame) >= 600) {
+        obstacles.add(new Obstacle());
+        lastObstacleSpawnFrame = numFrames;
     }
   
     // If it is time to become harder, do that
@@ -311,6 +324,9 @@ void draw() {
       }
       
       lastAgentShootFrame = numFrames;
+      
+      playShootingSound();
+      
       if (agentShootInterval > 180) {
         agentShootInterval -= 5;
       }
@@ -408,6 +424,10 @@ void draw() {
       shield.display();
     }
     
+    for (Obstacle obs : obstacles) {
+      obs.display();
+    }
+    
     for (Agent oneAgent : agents) {
       oneAgent.updateLocation();
       oneAgent.display();
@@ -422,6 +442,7 @@ void draw() {
         for (Agent a : agents) {
           if (isBulletHittingAgent(gb, a)) {
             gb.hit();
+            a.stopSound();
             agentsToRemove.add(a);
             score += a.getAttack() * 50;
           }
@@ -472,9 +493,13 @@ void draw() {
     }
   } else {
     
-    // Stop all the Sine oscillators
+    // Stop all the Sine oscillators and the grannular sounds
     for (SinOsc oneSineOsc : sineOscs) {
       oneSineOsc.stop();
+    }
+    
+    for (Agent a : agents) {
+      a.stopSound();
     }
     
     
@@ -496,9 +521,10 @@ void draw() {
 
 // To add a new ememy agent to the game
 Agent newAggentAppear(float speed) {
-   float initialMarginIndex = random(0.0, 4.0);
+    float initialMarginIndex = random(0.0, 4.0);
     float newAgentInitialX = 0.0;
     float newAgentInitialY = 0.0;
+    
     // 1/4 probability of appearing from top
     if (initialMarginIndex < 1.0) {
       newAgentInitialX = random(0.0, width);
@@ -520,7 +546,7 @@ Agent newAggentAppear(float speed) {
       newAgentInitialY = random(0.0, height);
     }
     
-  Agent newAgent = new Agent(newAgentInitialX, newAgentInitialY, speed);
+  Agent newAgent = new Agent(newAgentInitialX, newAgentInitialY, speed, this);
   return newAgent;
 }
 
@@ -583,6 +609,7 @@ boolean isBulletHittingGoblin(Bullet b) {
 void collide(Agent theAgent) {
   goblin.getHit(theAgent.getAttack());
   agentsToRemove.add(theAgent);
+  theAgent.stopSound();
 }
 
 
@@ -599,6 +626,8 @@ void mousePressed() {
       goblinBullets.add(new Bullet(goblin.getLocation().copy(), angle, true, goblin.getIsShielded(), 0.0, 0.0, 0.0));
     }
     lastShootFrame = numFrames;
+    
+    playShootingSound();
 
     // **Flash background lines when shooting**
     for (BackgroundLine line : bgLines) {
@@ -614,7 +643,7 @@ void mousePressed() {
   }
   else {
     fill(255, 200, 0);
-    text("RECHARGING", 25, 90);
+    text("RECHARGING", 25, 160);
   }
 }
 
@@ -655,3 +684,32 @@ void stopChord() {
     oneSineOsc.stop();
   }
 }
+
+// To play the "bling" shooting sound
+void playShootingSound() {
+  // Create a new sine oscillator for the "Bling!" sound
+  SinOsc bling = new SinOsc(this);
+  bling.freq(chords[currentChord][floor(random(0, 5))]); // Random note, one octave up
+  bling.amp(0); // Start with 0 amplitude (to avoid sudden noise)
+  bling.play();
+  //bling.phase(random(1.0));
+
+  // Create an envelope to shape the sound
+  Env envelope = new Env(this);
+  
+  // Define envelope parameters: attack, sustain, sustain level, release
+  float attackTime = 0.01;  // 10ms attack
+  float sustainTime = 0.1; // 50ms sustain
+  float sustainLevel = 0.9; // Medium volume sustain
+  float releaseTime = 0.2;  // 100ms release
+
+  // Play the envelope (all parameters filled correctly)
+  envelope.play(bling, attackTime, sustainTime, sustainLevel, releaseTime);
+
+  // Stop the oscillator after the full envelope duration
+  new Thread(() -> {
+    delay((int) ((attackTime + sustainTime + releaseTime) * 1000));
+    bling.stop();
+  }).start();
+}
+
