@@ -15,12 +15,49 @@
 
 
 
-// All characters ------------------------------------
+// Change the background to dynamic
+// SUPER MUSIC
+// glow to red when being hit
+
+
+
+
+
+// The sound package ----------------------------------------------
+import processing.sound.*;
+
+ArrayList<SinOsc> sineOscs = new ArrayList<SinOsc>();
+                           // SATB Sine oscillators
+Reverb reverb;             // Reverb effect
+int measureDuration;       // The amount of frame per measure (2 seconds, 120 frames)
+
+// Chordal Progression
+float[][] chords = {
+
+  {98.00, 196.00, 392.00, 466.16, 587.33},    // G minor
+  {77.78, 196.00, 392.00, 466.16, 622.25},    // Eb major
+  {116.54, 233.08, 349.23, 466.16, 587.33},   // Bb major
+  {87.31, 220.0, 349.23, 440.0, 523.25},      // F major
+  {130.81, 261.62, 311.12, 392.00, 523.25},   // C minor
+  {98.00, 196.00, 293.67, 392.00, 466.16},    // G minor
+  {110.0, 277.18, 329.63, 392.00, 466.16},    // A minor7q
+  {73.416, 293.67, 369.99, 440.0, 587.33}     // D major
+
+};
+
+
+int currentChord = 0; // 0 = G minor, 1 = F major
+boolean isPlaying = true; // Tracks whether the chord is playing or silent
+int lastSwitchTime = 0; // Stores when the last switch happened
+
+
+// All characters --------------------------------------------
 Goblin goblin;
 Potion potion;
 Shield shield;
 RechargeBar lbBar;
 RechargeBar sdBar;
+RechargeBar hpBar;
 ArrayList<Agent> agents = new ArrayList<Agent>();
 ArrayList<Agent> agentsToRemove = new ArrayList<Agent>();
 ArrayList<Bullet> goblinBullets = new ArrayList<Bullet>();
@@ -31,21 +68,24 @@ ArrayList<Bullet> agentBulletsToRemove = new ArrayList<Bullet>();
 
 // All parameters ------------------------------------
 boolean gameRunning;
+boolean isPaused;
 boolean needClearing;
 boolean superMode;
 int survivedTime;
 int score;
-int initialNumAgent = 30;
+int initialNumAgent = 60;
 int numAgent;
 float agentSpeed;
 int numFrames;
-int newAgentFrameCount = 240;        // A new agent will join the game every 4 seconds
-                                     // at first, and gradually faster
+int newAgentFrameCount;              // A new agent will join the game every 4 seconds
+int initialMargin = 10;              // The margin of each enemy agent outside the canvas when appearing
 int harderFrameCount = 360;          // The game becomes harder every 6 seconds
                                      // including agents' speed and refresh rate
                                      // limiting at 0.5 second / new agent
-int newPotionCount = 720;            // Potion refreshes every 12 seconds
+int newPotionCount;                  // Potion refreshes every 12 seconds at first
+                                     // Then shortened all the way to 9 seconds
 int newShieldCount;                  // Shield refreshes every 20 seconds
+                                     // Then shortened all the way to 12 seconds
 int takeShieldFrame = 0;
 int numGoblinBullet;
 int numNormalGoblinBullet;
@@ -60,17 +100,26 @@ int lastAgentShootFrame = 500;
 int agentShootInterval = 300;
 
 
+// Background ------------------------------------
+ArrayList<BackgroundLine> bgLines = new ArrayList<BackgroundLine>();
+
+
+
+
 
 // --------------------------------------------------
 void setup() {
   background(0);
   gameRunning = true;
+  isPaused = false;
   needClearing = false;
   survivedTime = 0;
   score = 0;
   numFrames = 0;
-  agentSpeed = 0.15;
+  agentSpeed = 0.25;
   newShieldCount = 1200;
+  newAgentFrameCount = 240;
+  newPotionCount = 720;
   
   shieldRechargeRatio = 0.0;
   shootingRechargeRatio = 1.0;
@@ -85,8 +134,9 @@ void setup() {
   goblin = new Goblin();
   potion = new Potion();
   shield = new Shield();
-  lbBar = new RechargeBar(255.0, 255.0, 0.0, 95.0);
-  sdBar = new RechargeBar(173.0, 216.0, 210.0, 105.0);
+  hpBar = new RechargeBar(255.0, 0.0, 0.0, 85.0, false);
+  lbBar = new RechargeBar(0.0, 204.0, 140.0, 95.0, true);
+  sdBar = new RechargeBar(173.0, 216.0, 210.0, 105.0, false);
   numAgent = initialNumAgent;
   for (int i = 0; i < initialNumAgent; i++) {
     Agent oneNewAgent = newAggentAppear(agentSpeed);
@@ -95,6 +145,39 @@ void setup() {
 
   size(1000, 700);
   textSize(24);
+  
+  // Sound initialization -----------------------------
+  // Initialize oscillators
+  for (SinOsc osc : sineOscs) {
+    osc.stop(); // Stop old oscillators
+  }
+  sineOscs.clear(); // Empty the list before adding new ones
+  
+  for (int i = 0; i < 5; i++) {
+    SinOsc newOscillator = new SinOsc(this);
+    newOscillator.amp(0.04);
+    sineOscs.add(newOscillator);
+  }
+  
+
+  // Initialize reverb
+  reverb = new Reverb(this);
+  for (SinOsc oneSineOsc : sineOscs) {
+    reverb.process(oneSineOsc);
+  }
+  reverb.room(0.7);
+  reverb.damp(0.6);
+
+  // Start with the first chord
+  currentChord = 0; // Reset chord index
+  playChord(chords[currentChord]);
+  lastSwitchTime = millis();
+  
+  
+  // Generate multiple random background lines
+  for (int i = 0; i < 20; i++) {  // **More lines for a denser background**
+    bgLines.add(new BackgroundLine());
+  }
 }
 
 
@@ -102,12 +185,44 @@ void setup() {
 // At every frame of the game
 void draw() {
   
+  noCursor();
+  
+  // Display background lines
+  for (BackgroundLine line : bgLines) {
+    line.update();
+    line.display();
+  }
+
   // The first things to display are the texts
   if (gameRunning) {
+    
+    int elapsed = millis() - lastSwitchTime;
+
+    if (isPlaying && elapsed >= 1500) { // Play chord for 1.5s
+      //stopChord(); // Silence for 0.5s
+      isPlaying = false;
+      lastSwitchTime = millis();
+    } 
+    else if (!isPlaying && elapsed >= 500) { // Silence for 0.5s passed
+      currentChord = (currentChord + 1) % 8; // Switch between G minor (0) and F major (1)
+      playChord(chords[currentChord]);
+      isPlaying = true;
+      lastSwitchTime = millis();
+    }
+    
+    if (isPaused) {
+      return;
+    }
+    
+    float lifeRatio = 1.0 - ((float) goblin.getLife() / 150.0); // Max life is 150
+    hpBar.refreshCurrentLength(lifeRatio);
+    
     fill(255);
     text("Life: " + goblin.getLife(), 25, 30);
     text("Time lapsed: " + survivedTime + "s", 25, 50);
     text("Your score: " + score, 25, 70);
+    
+    hpBar.display();
   } else {
     fill(255, 0, 255);
     text("GAME OVER", width / 2 - 60, height / 2);
@@ -118,7 +233,7 @@ void draw() {
   }
   
   // Then the shadow of the previous frame
-  fill(0, 33);
+  fill(0, 27);
   rect(0, 0, width, height);
   
   
@@ -150,6 +265,12 @@ void draw() {
       }
       if (newShieldCount >= 540) {
         newShieldCount -= 15;
+      }
+      if (newPotionCount >= 540) {
+        newPotionCount -= 30;
+      }
+      if (newShieldCount >= 720) {
+        newShieldCount -= 30;
       }
       numNormalGoblinBullet += 1;
       numShieldedGoblinBullet += 3;
@@ -219,6 +340,7 @@ void draw() {
       potion.hide();
       potion.refreshPosition();
       takingPotion = false;
+      goblin.startPotionGlow(); // Trigger green glow!
     }
     
     // Check if the goblin picks up the shield
@@ -236,6 +358,11 @@ void draw() {
       takingShield = false;
       shieldRechargeRatio = 0.0;
       sdBar.refreshCurrentLength(shieldRechargeRatio);
+
+      // **Make background lines colorful**
+      for (BackgroundLine line : bgLines) {
+        line.turnColorful();
+      }
     }
     
     // Check if the shield expires
@@ -246,10 +373,26 @@ void draw() {
   
     // Handle the location update and displaying of all characters
     goblin.updateLocation();
+    
+    // **Stop potion glow after 1 second**
+    if (goblin.isGlowingGreen && numFrames >= goblin.potionGlowStartFrame + 60) {
+      goblin.stopPotionGlow(); // Stop glowing after 60 frames (1 second)
+    }
+  
+  
     goblin.display();
     
     // Display the recharge bars
-    shootingRechargeRatio = (float)(numFrames - lastShootFrame) / (float)shootingInterval;
+    shootingRechargeRatio = 1 - ((float)(numFrames - lastShootFrame) / (float)shootingInterval);
+    
+    if (shootingRechargeRatio < 0.0) {
+      shootingRechargeRatio = 0.0;
+    }
+    
+    if (shootingRechargeRatio > 1.0) {
+      shootingRechargeRatio = 1.0;
+    }
+    
     lbBar.refreshCurrentLength(shootingRechargeRatio);
     lbBar.display();
     
@@ -328,6 +471,13 @@ void draw() {
       needClearing = true;
     }
   } else {
+    
+    // Stop all the Sine oscillators
+    for (SinOsc oneSineOsc : sineOscs) {
+      oneSineOsc.stop();
+    }
+    
+    
     if (needClearing) {
       agents.clear();
       agentsToRemove.clear();
@@ -335,6 +485,8 @@ void draw() {
       goblinBulletsToRemove.clear();
       agentBullets.clear();
       agentBulletsToRemove.clear();
+      
+      numFrames = 0;
       
       needClearing = false;
     }
@@ -350,21 +502,21 @@ Agent newAggentAppear(float speed) {
     // 1/4 probability of appearing from top
     if (initialMarginIndex < 1.0) {
       newAgentInitialX = random(0.0, width);
-      newAgentInitialY = 0.0;
+      newAgentInitialY = -1 * initialMargin;
     }
     // 1/4 probability of appearing from right
     else if (initialMarginIndex >= 1.0 && initialMarginIndex < 2.0) {
-      newAgentInitialX = width;
+      newAgentInitialX = width + initialMargin;
       newAgentInitialY = random(0.0, height);
     }
     // 1/4 probability of appearing from bottom
     else if (initialMarginIndex >= 1.0 && initialMarginIndex < 2.0) {
       newAgentInitialX = random(0.0, width);
-      newAgentInitialY = height;
+      newAgentInitialY = height + initialMargin;
     }
     // 1/4 probability of appearing from left
     else {
-      newAgentInitialX = 0.0;
+      newAgentInitialX = -1 * initialMargin;
       newAgentInitialY = random(0.0, height);
     }
     
@@ -437,15 +589,28 @@ void collide(Agent theAgent) {
 
 // To shoot
 void mousePressed() {
-  println("numBullets:" + numGoblinBullet);
+  // Check if it's time to shoot or if the Goblin is shielded
   if (numFrames >= lastShootFrame + shootingInterval || goblin.getIsShielded()) {
     shootingRechargeRatio = 0.0;
     lbBar.refreshCurrentLength(shootingRechargeRatio);
+    
     for (int i = 0; i < numGoblinBullet; i++) {
       float angle = TWO_PI / numGoblinBullet * i;
       goblinBullets.add(new Bullet(goblin.getLocation().copy(), angle, true, goblin.getIsShielded(), 0.0, 0.0, 0.0));
     }
     lastShootFrame = numFrames;
+
+    // **Flash background lines when shooting**
+    for (BackgroundLine line : bgLines) {
+      line.flashBright();
+    }
+
+    // **Blink background lines when shielded & shooting**
+    if (goblin.getIsShielded()) {
+      for (BackgroundLine line : bgLines) {
+        line.blink();
+      }
+    }
   }
   else {
     fill(255, 200, 0);
@@ -453,14 +618,40 @@ void mousePressed() {
   }
 }
 
+
 void keyPressed() {
   if (key == 'q') {
     superMode = true;
     goblin.shield();
     numGoblinBullet = numShieldedGoblinBullet;
   }
-  if (key == ' ' && !gameRunning) {
-    gameRunning = true;
-    setup();
+  if (key == ' ') {
+    if (!gameRunning) {
+      gameRunning = true;
+      setup();
+    } else {
+      isPaused = !isPaused;
+    }
+  }
+}
+
+
+// Function to play the full chord
+void playChord(float[] freqs) {
+
+  int freqIndex = 0;
+  for (SinOsc oneSineOsc : sineOscs) {
+    oneSineOsc.freq(freqs[freqIndex]);
+    oneSineOsc.amp(0.04);
+    oneSineOsc.play();
+    freqIndex += 1;
+  }
+  
+}
+
+// Function to stop the chord (silence for 0.5s)
+void stopChord() {
+  for (SinOsc oneSineOsc : sineOscs) {
+    oneSineOsc.stop();
   }
 }
